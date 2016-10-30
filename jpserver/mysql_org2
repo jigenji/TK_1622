@@ -1,0 +1,15 @@
+create table delivery_5(
+  id int not null auto_increment primary key,
+  userName varchar(255) not null,
+  companyflag int not null,
+  deliverynumber int not null,
+  deliveryname char(64),
+  scheduleflag int default 0,
+  scheduledday date,
+  scheduletime time,
+  starttime time,
+  endtime time
+);
+
+
+create table user_record(   id int not null auto_increment primary key,   userName varchar(255) not null unique,   userId varchar(255) not null unique,   hashPassword varchar(255),   latitude float not null ,   longitude float not null,   postal char(32) not null,   prefecture char(32) not null,   ward char(32) not null,   address char(128),   apartment char(128) not null,   phonenumber char(32), created timestamp not null );

@@ -1,4 +1,4 @@
-　
+
 <!---　制作情報
   // Created by Yamashita Keisuke
   // Date:23/10/2016
@@ -8,13 +8,14 @@
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>宅配希望時間ヒートマップ</title>
+  <title>My宅配netヒートマップ</title>
 
   <!-- 外部ファイルのインポート -->
   <link rel="stylesheet" href="index.style.css">
-  <?php require(dirname(__FILE__)."/server/database/test_RecordMachine.php");?>
+  <?php require(dirname(__FILE__)."/server/database/FinalReadMachine.php");?>
   <?php $Yam = new DaysRecordMachine(); ?>
-  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyB-DChcRioj2lMlZk0hj0-SbnrEeKfYVp8&sensor=FALSE&libraries=visualization"></script>
+  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyB-DChcRioj2lMlZk0hj0-SbnrEeKfYVp8&libraries=visualization"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 
 </head>
 
@@ -25,32 +26,44 @@
   <span id="range">0:00</span> <!-- spanは特定の処理をさせる意味なしタグ -->
   <script type="text/javascript">
     var map,loadcounter=0;
-    function initialize() {
+    function initialize(time_hour = 0) {
       // 初期設定ピン
       var markerData = [ // この真下の引数は時間$timeと区認識番号$wardである。
-        <?php echo json_encode($Yam->getUsersValueArray(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
+        <?php echo json_encode($Yam->getUsersValueArray(0,6), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
       ];
+      // console.log(markerData);
+      // console.log(time_hour);
+      var timeNumber = "time" + time_hour;
+      // console.log(timeNumber);
+      // console.log(markerData[0][2][timeNumber]);
+      // console.log(markerData);
+
       if(loadcounter != 0){
-        var address = "御茶ノ水駅"
-    }else{
-      var address = prompt("表示したい区を”〇〇区”のように入寮してください。\n今のところ空白で送信したら大丈夫！\n");
-      var address = "新御茶ノ水駅";
-    }
-      loadcounter ++;
-      var geocoder = new google.maps.Geocoder();
-      geocoder.geocode( {'address':address}, function(results, status) {
-      // ジオコーディングが成功した場合
-      if (status == google.maps.GeocoderStatus.OK) {
-        // google.maps.Map()コンストラクタに定義されているsetCenter()メソッドで
-        map.setCenter(results[0].geometry.location);
-        // 変換した緯度・経度情報を渡してインスタンスを生成
-        var marker = new google.maps.Marker({
-          map: map,
-          animation: google.maps.Animation.DROP,
-          position: results[0].geometry.location
-        });
-      } else {alert(address + 'の住所情報を取得することができませんでした: ' + status);}
-    });
+        var address = "御茶ノ水駅";
+        // var address = map.getCenter();
+        // map.setCenter(address);
+        // console.log(address);
+        }
+
+      else{
+        var address = prompt("表示したい区を”〇〇区”のように入力してください。");
+        var address = "台東区";
+        loadcounter ++;
+      }
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode( {'address':address}, function(results, status) {
+        // ジオコーディングが成功した場合
+        if (status == google.maps.GeocoderStatus.OK) {
+          // google.maps.Map()コンストラクタに定義されているsetCenter()メソッドで
+          map.setCenter(results[0].geometry.location);
+          // 変換した緯度・経度情報を渡してインスタンスを生成
+          var marker = new google.maps.Marker({
+            map: map,
+            position: results[0].geometry.location
+          });
+        } else {alert('住所情報を取得することができませんでした: ' + status);}
+      })
+
 
       // 地図の作成
       map = new google.maps.Map(document.getElementById('map_canvas'), { // google.maps.Map(第一引数(表示位置,サイズ)のdiv要素（ここではid指定した),第二引数(オプション))
@@ -62,13 +75,15 @@
 
     // ヒートマップ用のデータ
     var heatmapData = [];
-      for (var j = 0; j < markerData.length; j++) {
-        heatmapData[j] = new google.maps.LatLng({lat: markerData[j]['latitude'], lng: markerData[j]['longtude']});
-      }
+    for (var j = 0; j < markerData[0].length; j++) {
+      if(markerData[0][j][timeNumber]!=0){
+      heatmapData[j] = new google.maps.LatLng({lat: markerData[0][j]['latitude'], lng: markerData[0][j]['longitude']});
+    }else{}
+  }
 
     // レイヤーの作成、プロパティ
     var heatmap = new google.maps.visualization.HeatmapLayer({
-      radius : 8,
+      radius : 18,
       data: heatmapData
     });
 
@@ -78,17 +93,18 @@
     heatmap.setData(heatmapData);
   }
 
-  }
+}
+
     // スライダーを表示、値を取得
     function showValue(newValue){
       var minute = ":00";
       var time_hour = newValue / 3600;
-      initialize();
       if(newValue==86400){
         time_hour -= 1;
         minute = ":59";
       }else{}
         document.getElementById("range").innerHTML=time_hour+minute;
+        initialize(time_hour);
     }
 
     // phpの変数からjavascriptの変数への受け渡しラップ関数

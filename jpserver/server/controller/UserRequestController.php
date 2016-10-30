@@ -5,6 +5,7 @@ require_once dirname(__FILE__).'/../database/RecordMachine.php';
 require_once dirname(__FILE__).'/../json/fromjson.php';
 require_once dirname(__FILE__).'/../json/tojson.php';
 
+echo 211;
 //jsonファイルの受け取り
 $json_string = file_get_contents('php://input');
 $jsonflag = new FlagTransJson($json_string);

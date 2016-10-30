@@ -14,7 +14,7 @@ class ReadMachine
       $this->db = new PDO(PDO_DSN, DB_USERNAME, DB_PASSWORD);
       $this->db -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e) {
-      echo $e->getMessage();
+      // echo $e->getMessage();
       exit;
     }
   }
@@ -23,7 +23,7 @@ class ReadMachine
     try{
       $this->db = null;
     } catch (PDOException $e) {
-      echo $e->getMessage();
+      // echo $e->getMessage();
       exit;
     }
   }

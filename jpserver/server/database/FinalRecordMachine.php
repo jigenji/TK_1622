@@ -38,7 +38,7 @@
           case '千代田区':
             $lat = 35.694003;
             $lng = 139.753595;
-            $ppl = (int)29393/$scale;
+            $ppl = 29393/$scale;
             return array(1,$lat,$lng,$ppl);
           case '中央区':
             $lat = 35.671034;
@@ -154,39 +154,6 @@
             return false;
         }
       }
-
-    function generate_norm($average = 0.0, $variance = 1.0) {
-        static $z1, $z2, $mt_max, $ready = true;
-        if ($mt_max === null) {
-            $mt_max = mt_getrandmax();
-        }
-        $ready = !$ready;
-        if ($ready) {
-            return $z2 * $variance + $average;
-        }
-        $u1 = mt_rand(1, $mt_max - 1) / $mt_max;
-        $u2 = mt_rand(1, $mt_max - 1) / $mt_max;
-        $v1 = sqrt(-2 * log($u1));
-        $v2 = 2 * M_PI * $u2;
-        $z1 = $v1 * cos($v2);
-        $z2 = $v1 * sin($v2);
-        return (float)($z1 * $variance + $average);
-    }
-
-    function makeUserBinaryTime($resultGauss){
-      $binaryData = 0b000000000000000000000000;
-      for($j=1;$j<=(2**$resultGauss);$j++){
-        $binaryData += 0b00000000000000000000001;
-      }
-      return $binaryData;
-    }
-
-    function makeUserLatLng($lat,$lng){
-      $latreturn = $lat + rand(0,10)/100;
-      $lngreturn = $lng + rand(0,10)/100;
-      $array = [$latreturn,$lngreturn];
-      return $array;
-    }
   }
 
   //user_recordテーブル用クラス
@@ -202,7 +169,7 @@
 
 
     //会員登録メソッド
-    public function resisterUser($userName, $userId, $hashPassword, $latitude, $longitude, $postal=null, $prefecture=null, $ward=null, $address=null, $apartment=null,$wardnumber=6)
+    public function resisterUser($userName, $userId, $hashPassword, $latitude, $longitude,$wardnumber=6, $postal=null, $prefecture=null, $ward=null, $address=null, $apartment=null)
     {
       try{
         // $this->db = new PDO(PDO_DSN, DB_USERNAME, DB_PASSWORD);
@@ -275,7 +242,6 @@
         exit;
       }
     }
-
   }
 
 
@@ -323,8 +289,8 @@
       }
     }
 
-    //二進数で指定した時間の値を1つ増やすに値をセット("Yamashita,0,any")
-    public function addUserTimeValue($userName, $select,$wardnumber=6)
+    //二進数で指定した時間の値を1つ増やすに値をセット("Yamashita,二進数データ,区を任意で")
+    public function addUserTimeValue($userName, $select,$wardnumber)
     {
       $str = "delivery_record_".$wardnumber;
       try{
@@ -343,7 +309,7 @@
     }
 
     //二進数で指定した時間の値を1つ増やすに値をセット("Yamashita,0,any")
-    public function addUseAppDays($userName,$wardnumber=6)
+    public function addUseAppDays($userName,$wardnumber)
     {
       $str = "delivery_record_".$wardnumber;
       try{
@@ -357,10 +323,12 @@
     }
 
     //二進数で指定した時間の値を1つ増やすに値をセット("Yamashita,0,any")
-    public function addTotalDelivaryDays($userName,$wardnumber=6)
+    public function addTotalDelivaryDays($userName,$wardnumber)
     {
       $str = "delivery_record_".$wardnumber;
       try{
+        //change
+          // $stmt = $this->db->prepare("update ".$str." set totalDeliveryDays = totalDeliveryDays + 1 where userName = :userName");
           $stmt = $this->db->prepare("update ".$str." set totalDeliveryDays = totalDeliveryDays + 1 where userName = :userName");
           $stmt->bindParam(':userName', $userName, PDO::PARAM_STR);
           $stmt->execute();
@@ -428,6 +396,42 @@
               'lng' => (float)$pos["longitude"]
             );
       return $arr;
+    }
+
+    function generate_norm($average = 13.0, $variance = 5.0) {
+        static $z1, $z2, $mt_max, $ready = true;
+        if ($mt_max === null) {
+            $mt_max = mt_getrandmax();
+        }
+        $ready = !$ready;
+        if ($ready) {
+            return $z2 * $variance + $average;
+        }
+        $u1 = mt_rand(1, $mt_max - 1) / $mt_max;
+        $u2 = mt_rand(1, $mt_max - 1) / $mt_max;
+        $v1 = sqrt(-2 * log($u1));
+        $v2 = 2 * M_PI * $u2;
+        $z1 = $v1 * cos($v2);
+        $z2 = $v1 * sin($v2);
+        return (float)($z1 * $variance + $average);
+    }
+
+    function makeUserBinaryTime($resultGauss){
+      $binaryData = 0b00000000000000000000001;
+      for($i=0;$i<($resultGauss-1);$i++){
+       $binaryData = ($binaryData << 1);
+    }
+    if(sprintf('%024d', decbin($binaryData)) =="00009223372036854775807"){
+      $binaryData = 0b00000000000000000000000;
+    }else{}
+      return $binaryData;
+    }
+
+    function makeUserLatLng($lat,$lng){
+      $latreturn = $lat + rand(-10,10)/1000;
+      $lngreturn = $lng + rand(-10,10)/1000;
+      $array = [$latreturn,$lngreturn];
+      return $array;
     }
 
   }
@@ -514,38 +518,36 @@
     }
   }
 
-
-  $Write = new RecordMachine();
   $Yam = new DaysRecordMachine();
 
-
-
 // 初期設定
-  $Writeswitch = false; //書き込みモードならtrueを、デモモードならfalseを代入。
+  $Writeswitch = true; //書き込みモードならtrueを、デモモードならfalseを代入。
   $area = "台東区";      //区指定
   $scale = 1000;         //世帯数のスケール(1000でマックス440個のデータ)
-  $average = 15;         //Gaussの平均値（宅配時間指定について)
-  $variance = 3.0;     //Gaussの分散(時間について)
+  $average = 21;         //Gaussの平均値（宅配時間指定について)
+  $variance = 4.0;     //Gaussの分散(時間について)
 // 初期設定
 
+$NumberfromGauss = 0;
 
-
-  $wardNumber = $Write->switchWard($area,$scale);
+  $wardNumber = RecordMachine::switchWard($area,$scale);
   if($Writeswitch){
     echo "これは書き込みモードです。";
-    for($j=1;$j<=((int)$wardNumber[3]);$j++){
+    for($j=1;$j<=((int)$wardNumber[3]);$j++){   //$wardNumber[3]は世帯数が格納されてる
       $userNamesha1 = sha1(uniqid(rand(),1));
-      $latlng = $Write->makeUserLatLng($wardNumber[1],$wardNumber[2]); //正確な緯度軽度取得
-      $Yam -> resisterUser($userNamesha1,$j,$latlng[0],$latlng[1]);
+      $latlng = $Yam->makeUserLatLng($wardNumber[1],$wardNumber[2]); //正確な緯度軽度取得
+      $Yam -> resisterUser($userNamesha1,$j,$latlng[0],$latlng[1],$wardNumber[0]);
       for($i=0;$i<30;$i++){
-          $NumberfromGauss = $Write->generate_norm($average=15,$variance=2.0); //ガウス分布の値を戻り値
-          $result = $Write->makeUserBinaryTime($NumberfromGauss);               //分布の値を元に時間を生成
-          $Yam->addUserTimeValue($userNamesha1,$result);
-          $Yam->addTotalDelivaryDays("userNamesha1");
-          $Yam->addUseAppDays("userNamesha1");
+          $NumberfromGauss = $Yam->generate_norm(($average-6),$variance); //ガウス分布の値を戻り値
+          $result = $Yam->makeUserBinaryTime($NumberfromGauss);               //分布の値を元に時間を生成
+          $Yam->addUserTimeValue($userNamesha1,$result,$wardNumber[0]);
+          $Yam->addTotalDelivaryDays($userNamesha1,$wardNumber[0]);
+          $Yam->addUseAppDays($userNamesha1,$wardNumber[0]);
       }
     }
   }
+
+
   else{
     // 確認用にechoを多数用いているが気にしないでbyYamashitaKeisuke
     echo "DemoMode!DemoMode!DemoMode!DemoMode!DemoMode!";
@@ -564,12 +566,11 @@
     echo (int)$wardNumber[3];
     echo nl2br("\n");
     for($k=0;$k<=((int)$wardNumber[3]);$k++){
-      for($j=0;$j<=(rand(1,10));$j++){
         $userNamesha1 = sha1(uniqid(rand(),1));
         echo "UserName:\t";
         echo $userNamesha1;
         echo nl2br("\n");
-        $latlng = $Write->makeUserLatLng($wardNumber[1],$wardNumber[2]); //正確な緯度軽度取得
+        $latlng = $Yam->makeUserLatLng($wardNumber[1],$wardNumber[2]); //正確な緯度軽度取得
         echo "乱数的な緯度\t";
         echo $latlng[0];
         echo nl2br("\n");
@@ -577,26 +578,16 @@
         echo $latlng[1];
         echo nl2br("\n");
           for($i=0;$i<30;$i++){
-            $NumberfromGauss = $Write->generate_norm($average,$variance); //ガウス分布の値を戻り値
-            $result = $Write->makeUserBinaryTime($NumberfromGauss);               //分布の値を元に時間を生成
+            $NumberfromGauss = $Yam->generate_norm($average-6,$variance); //ガウス分布の値を戻り値
+            $result = $Yam->makeUserBinaryTime($NumberfromGauss);             //分布の値を元に時間を生成
             echo "二進数的な時間\t";
             echo sprintf('%024d', decbin($result));
             echo nl2br("\n");
           }
+        }
         echo nl2br("\n");
     }
-  }
-}
 
-//   $ward = RecordMachine::switchWard('台東区');
-//   $latlng = $Yam->makeUserLatlLng($ward);
-//   $binaryNumber = $Yam->makeUserBinaryTime($ward);
-//   for($i=0;$i<=(rand(1,100));$i++){
-//     $Yam -> resisterUser($userNamesha1,j,36.0,140.0);
-//     $Yam->addUserTimeValue($userNamesha1,0b00001111111111110000);
-//     $Yam->addTotalDelivaryDays($userNamesha1);
-//     $Yam->addUseAppDays($userNamesha1);
-//   }
   ?>
 
 </body>

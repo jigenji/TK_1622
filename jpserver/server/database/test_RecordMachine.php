@@ -81,6 +81,7 @@ class RecordMachine
     }
 
   }
+}
 
   // function makeUserBinaryTime($resultGauss){
     // $binaryData = 0b000000000000000000000000;
@@ -289,7 +290,7 @@ class DaysRecordMachine extends RecordMachine
   }
 
 
-   public function getUsersValueArray($time,$wardnumber=6){
+   public function getUsersValueArray($time=0,$wardnumber=6){
     try{
       if($time < 0 && $time > 25){
         throw new Exception('NOT RU');
@@ -300,7 +301,6 @@ class DaysRecordMachine extends RecordMachine
       $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
       // $stmt->setFetchMode(PDO::FETCH_CLASS, 'stdClass');
       // $results = $stmt->fetch();
-
       //ここにかさみ付けアルゴリヅムを書く
       //weigtはtime3に格納
       foreach ($results as $key => $value) {
@@ -308,17 +308,15 @@ class DaysRecordMachine extends RecordMachine
           $results[$key]["time".$time] = $value["time".$time]*$value["time".$time]/$value["useAppDays"];
           $results[$key]["latitude"] = (float)$results[$key]["latitude"];
           $results[$key]["longitude"] = (float)$results[$key]["longitude"];
-
         }
         unset($results[$key]["useAppDays"]);
         unset($results[$key]["totalDeliveryDays"]);
       }
-
-
       return $results;
-
     } catch (PDOException $e) {
+
       return false;
+
     }
   }
 
@@ -420,7 +418,7 @@ class DeliveryRecordMachine extends RecordMachine
 // echo RecordMachine::switchWard('中央区');
 //　データベースに書き込む関数。userNameを統一することに注意すること！！
 $Yam = new DaysRecordMachine();
-var_dump($Yam->getUsersValueArray(4));
+var_dump($Yam->getUsersValueArray(0,6));
 // for($j=0;$j<=(rand(1,10));$j++){
 //   $userNamesha1 = sha1(uniqid(rand(),1));
 //   $ward = RecordMachine::switchWard('台東区');

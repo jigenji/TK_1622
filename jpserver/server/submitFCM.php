@@ -1,7 +1,7 @@
 <?php
 $url = "https://fcm.googleapis.com/fcm/send";
-$api_key = "AIzaSyC4n4Cr8bdsIDm6TNVmCGUXnYSqKWlTlYk";
-$ids = "e47I7GCJduI:APA91bHebSer0z3sDZa3nW19kiwGo3V0uOCNNCwrtLs-BnWOdqNGZASFsEb7ortSKfi3rVraSWxwArP-_NZU9-FbJZpnD6C77LEOC40wgqDxLC-DhxR6LphRPz5atIbbk5GJ9mvBwytt";
+$api_key = "AIzaSyB8afUb-zHZtGP4qn8VblUcFQwmz5hSzvM";
+$ids = "fyGR7VTyG8U:APA91bEJNvq9hrB7xR-YgHAMJN2XuQ7TnyLDGYXgFj_-WTR5iEMm8nPgpnmq8qx-0Bp81_6Y_KC8r9sHX-ZPFAg2bzTb0RctYNfjEDSblwyhFHS6gqhCa8qaCOxpFmhZni4Z_MhJUCzy";
 $msg_url = "http://msg.com";
 $msg_title = "message_title";
 // $arr = array(
@@ -33,10 +33,10 @@ $fields = array(
   'priority' => 'high',
   //携帯がアクティブになるまで送信をまつ
   "delay_while_idle" => true,
-  //
-  "time_to_live" => 60,
+
+  "icon" => "myicon",
   //表示する部分
-  'notification'=> array( 'body'=>'great book','title' => 'fromphp',"icon"=> "myicon" ),
+  'notification'=> array( 'body'=>'本日配送予定の商品があります','title' => 'MY宅配',"icon"=> "myicon" ),
   //データとして渡す部分
   'data'=> array( 'Nick'=>'MARIO','body' => 'great match',"Room"=> "PortugalVSDenmark" ),
   //宛先
